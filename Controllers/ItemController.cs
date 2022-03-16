@@ -30,7 +30,7 @@ namespace FOODPEDI.API.REST.Controllers
         [AllowAnonymous]
         [HttpGet("basic-list")]
         //[Authorize(Roles = "Admin, User")]
-        public async Task<IActionResult> BasicList(string categoryId)
+        public async Task<IActionResult> BasicList(string categoryId ,int page, int pageCount=20)
         {
             try
             {
@@ -39,6 +39,7 @@ namespace FOODPEDI.API.REST.Controllers
                 {
                     var data = await dbContext.Items
                         .Where(x => x.ItemCategories.FirstOrDefault(c=>c.CategoryId==categoryId).CategoryId==categoryId && x.State == ItemState.Confirmed)
+                        .Skip((page-1)*pageCount).Take(pageCount)
                         .Include(c=>c.ItemCategories).ThenInclude(c=>c.Category).Include(i=>i.ItemImages)
                         .Select(x=> new { 
                             Id=x.Id,

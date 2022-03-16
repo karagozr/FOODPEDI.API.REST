@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31613.86
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FOODPEDI.API.REST", "FOODPEDI.API.REST.csproj", "{9416933D-9FE6-47FB-A87F-6891AE291888}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9416933D-9FE6-47FB-A87F-6891AE291888}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9416933D-9FE6-47FB-A87F-6891AE291888}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9416933D-9FE6-47FB-A87F-6891AE291888}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9416933D-9FE6-47FB-A87F-6891AE291888}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DFB7A191-44EB-4475-ADC3-DBC8D8411651}
+	EndGlobalSection
+EndGlobal

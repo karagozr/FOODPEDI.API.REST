@@ -26,11 +26,11 @@ namespace FOODPEDI.API.REST.Controllers
     public class AuthController : Controller
     {
         private readonly UserManager<AppUser> userManager;
-        private readonly RoleManager<IdentityRole> roleManager;
+        private readonly RoleManager<AppRole> roleManager;
         private readonly SignInManager<AppUser> signInManager;
         private readonly IConfiguration _configuration;
 
-        public AuthController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager , RoleManager<IdentityRole> roleManager, IConfiguration configuration)
+        public AuthController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager , RoleManager<AppRole> roleManager, IConfiguration configuration)
         {
             this.signInManager = signInManager;
             this.userManager = userManager;
@@ -58,8 +58,7 @@ namespace FOODPEDI.API.REST.Controllers
                 roleList.Add(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()));
                 roleList.Add(new Claim(ClaimTypes.Name, user.UserName.ToString()));
                 roleList.Add(new Claim("Fullname", user.FirstName + " " + user.LastName));
-
-                roleList.Add(new Claim(ClaimTypes.Role, "User"));
+                roleList.Add(new Claim(ClaimTypes.Role, user.UserRoles.FirstOrDefault().Role.Name));
 
                 var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
                 var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
@@ -104,7 +103,7 @@ namespace FOODPEDI.API.REST.Controllers
                     var role = await roleManager.Roles.FirstOrDefaultAsync(x => x.Name == "User");
                     if (role == null)
                     {
-                        await roleManager.CreateAsync(new IdentityRole
+                        await roleManager.CreateAsync(new AppRole
                         {
                             Id = Guid.NewGuid().ToString(),
                             Name = "User",
@@ -148,7 +147,7 @@ namespace FOODPEDI.API.REST.Controllers
         {
             try
             {
-                var checkUser = userManager.Users.FirstOrDefault(x => x.Email == userLoginModel.Email || x.UserName == userLoginModel.UserName);
+                var checkUser = userManager.Users.Include(a=>a.UserRoles).ThenInclude(i=>i.Role).FirstOrDefault(x => x.Email == userLoginModel.Email || x.UserName == userLoginModel.UserName);
 
                 if (checkUser==null)
                 {
@@ -207,7 +206,6 @@ namespace FOODPEDI.API.REST.Controllers
             return BadRequest();
 
         }
-
 
     }
 }

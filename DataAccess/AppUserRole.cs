@@ -6,13 +6,14 @@ using System.Threading.Tasks;
 
 namespace FOODPEDI.API.REST.DataAccess
 {
-    public class AppUser:IdentityUser
+    public class AppUserRole : IdentityUserRole<string>
     {
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public string OAuthSubject { get; set; }
-        public string OAuthIssuer { get; set; }
+        public virtual AppUser User { get; set; }
+        public virtual AppRole Role { get; set; }
+    }
 
+    public class AppRole : IdentityRole
+    {
         public ICollection<AppUserRole> UserRoles { get; set; }
     }
 }

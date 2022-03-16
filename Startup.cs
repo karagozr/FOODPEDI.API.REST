@@ -26,6 +26,7 @@ namespace FOODPEDI.API.REST
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+           
         }
 
         public IConfiguration Configuration { get; }
@@ -48,8 +49,97 @@ namespace FOODPEDI.API.REST
             services.AddDbContext<AppDbContext>(option => 
             option.UseNpgsql(Configuration.GetConnectionString("AppConnStr")));
 
-            services.AddIdentity<AppUser, IdentityRole>().AddEntityFrameworkStores<AppDbContext>();//.AddDefaultTokenProviders();
+            services.AddIdentity<AppUser, AppRole>().AddEntityFrameworkStores<AppDbContext>();//.AddDefaultTokenProviders();
             //services.ConfigureApplicationCookie(options => { options.LoginPath = "/Auth/Unauthorize";options.AccessDeniedPath = "/Auth/AccessDenied"; });
+
+
+            using (var context = new AppDbContext())
+            {
+                context.Database.Migrate();
+                var admin = context.Users.FirstOrDefault(x => x.UserName == "Admin");
+
+                var masterRole = context.Roles.FirstOrDefault(x => x.Name == "Master");
+                var adminRole = context.Roles.FirstOrDefault(x => x.Name == "Admin");
+                var userRole = context.Roles.FirstOrDefault(x => x.Name == "User");
+
+                var masterRoleId = Guid.NewGuid().ToString();
+                var adminRoleId = Guid.NewGuid().ToString();
+                var userRoleId = Guid.NewGuid().ToString();
+
+                var hasNotRole = (masterRole == null || adminRole == null || userRole == null);
+
+                if (masterRole == null)
+                {
+                    masterRole = new AppRole
+                    {
+                        Id = masterRoleId,
+                        Name = "Master",
+                        NormalizedName = ("Master").ToUpper()
+
+                    };
+                    context.Roles.Add(masterRole);
+                }
+
+                if (adminRole == null)
+                {
+                    adminRole = new AppRole
+                    {
+                        Id = adminRoleId,
+                        Name = "Admin",
+                        NormalizedName = ("Admin").ToUpper()
+
+                    };
+                    context.Roles.Add(adminRole);
+
+                }
+
+                if (userRole == null)
+                {
+                    userRole = new AppRole
+                    {
+                        Id = userRoleId,
+                        Name = "User",
+                        NormalizedName = ("User").ToUpper()
+
+                    };
+                    context.Roles.Add(userRole);
+
+                }
+
+                if (hasNotRole)
+                    context.SaveChanges();
+
+                if (admin == null)
+                {
+                    AppUser user = new AppUser
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        Email = "admin@foodpedi.com",
+                        UserName = "Admin",
+                        FirstName = "Food",
+                        LastName = "Pedi",
+                        EmailConfirmed = true
+                    };
+
+
+                    var result = context.Users.Add(user);
+
+                    context.SaveChanges();
+                    var _passwordHasher = new PasswordHasher<AppUser>();
+                    user.PasswordHash = _passwordHasher.HashPassword(user, "Master1234");
+                    user.SecurityStamp = Guid.NewGuid().ToString();
+
+                    context.UserRoles.Add(new AppUserRole
+                    {
+                        RoleId = masterRole.Id,
+                        UserId = user.Id,
+
+                    });
+
+                    context.SaveChanges();
+
+                }
+            }
 
             services.ConfigureApplicationCookie(options =>
             {
@@ -91,11 +181,6 @@ namespace FOODPEDI.API.REST
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]))
                     };
                 });
-            //.AddGoogle(options =>
-            //    {
-            //        options.ClientId = "502100806194-t7ep21kpl3j6k7lm08lt7i2au4728nia.apps.googleusercontent.com";
-            //        options.ClientSecret = "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";
-            //    });
             services.AddControllers().AddNewtonsoftJson(options =>
                 options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
             );
@@ -144,9 +229,17 @@ namespace FOODPEDI.API.REST
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "FOODPEDI.API.REST v1"));
             }
 
-            app.UseHttpsRedirection();
+            if (!env.IsDevelopment())
+            {
+                app.UseHttpsRedirection();
+            }
 
             app.UseRouting();
+
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
+            });
 
             app.UseAuthentication();
             app.UseAuthorization();
